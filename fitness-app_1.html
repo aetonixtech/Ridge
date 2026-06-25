@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STRAIN — Body Metrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black: #0a0a0b;
+    --surface: #151517;
+    --surface-2: #1f1f22;
+    --line: rgba(255,255,255,0.07);
+    --text: #f2f1ee;
+    --text-dim: #8d8b89;
+    --orange: #ff5a1f;
+    --orange-2: #ffae33;
+    --orange-3: #ff8a3d;
+    --orange-soft: rgba(255,90,31,0.12);
+    --zone-low: #7a3b1d;
+    --zone-avg: #ff5a1f;
+    --zone-high: #ffc163;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background:#000;
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    height:100%;
+    width:100%;
+  }
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:18px;
+  }
+
+  /* ===== PHONE FRAME ===== */
+  .phone-frame{
+    width:390px;
+    height:844px;
+    background:var(--black);
+    border-radius:44px;
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 0 0 8px #050505, 0 30px 80px -20px rgba(255,90,31,0.18), 0 0 60px rgba(0,0,0,0.6);
+    overflow:hidden;
+    position:relative;
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(255,90,31,0.10), transparent 45%),
+      radial-gradient(circle at 100% 0%, rgba(255,138,61,0.06), transparent 40%);
+  }
+  .notch{
+    position:absolute;
+    top:0; left:50%; transform:translateX(-50%);
+    width:120px; height:26px;
+    background:#000;
+    border-radius:0 0 16px 16px;
+    z-index:50;
+  }
+  #app{ height:100%; width:100%; position:relative; }
+  .screen{ display:none; height:100%; width:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .screen.active{ display:flex; flex-direction:column; }
+
+  @media (max-width:430px){
+    body{ padding:0; }
+    .phone-frame{ width:100vw; height:100vh; border-radius:0; border:none; box-shadow:none; }
+  }
+
+  /* ===== SETUP ===== */
+  #setup-screen.active{ display:flex; }
+  .progress-bar-wrap{
+    width:100%;
+    height:5px;
+    background:var(--surface-2);
+    position:relative;
+    flex-shrink:0;
+    margin-top:26px;
+  }
+  .progress-bar-fill{
+    height:100%;
+    width:20%;
+    background:linear-gradient(90deg, var(--orange-3), var(--orange));
+    transition:width .45s cubic-bezier(.65,0,.35,1);
+    box-shadow:0 0 14px rgba(255,90,31,.55);
+  }
+
+  .setup-body{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    overflow-y:auto;
+  }
+  .setup-card{ width:100%; max-width:340px; }
+  .step-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--orange-3);
+    margin-bottom:14px;
+  }
+  .step-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:27px;
+    font-weight:600;
+    line-height:1.15;
+    margin-bottom:8px;
+  }
+  .step-sub{ color:var(--text-dim); font-size:14px; margin-bottom:30px; line-height:1.5; }
+  .step{ display:none; }
+  .step.active{ display:block; animation:fadeUp .4s ease both; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:block; font-size:11.5px; color:var(--text-dim); margin-bottom:8px;
+    font-family:'JetBrains Mono', monospace; letter-spacing:.04em;
+  }
+  .field input[type="text"], .field input[type="number"]{
+    width:100%; background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:16px; color:var(--text); font-size:17px; font-family:'Inter', sans-serif; outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .field input:focus{ border-color:var(--orange); box-shadow:0 0 0 3px var(--orange-soft); }
+
+  /* slider steps */
+  .slider-display{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  .slider-display .big-num{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:54px;
+    font-weight:700;
+    line-height:1;
+    color:#fff;
+  }
+  .slider-display .big-unit{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--orange-3);
+    margin-top:6px;
+  }
+  .slider-block{ margin-bottom:26px; }
+  .slider-block .slider-label{
+    display:flex; justify-content:space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; color:var(--text-dim); margin-bottom:10px; letter-spacing:.04em;
+  }
+  .slider-block .slider-label b{ color:var(--text); font-weight:600; }
+  input[type="range"].big-slider{
+    -webkit-appearance:none;
+    appearance:none;
+    width:100%;
+    height:6px;
+    border-radius:6px;
+    background:var(--surface-2);
+    outline:none;
+  }
+  input[type="range"].big-slider::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:26px; height:26px;
+    border-radius:50%;
+    background:linear-gradient(135deg, var(--orange-3), var(--orange));
+    box-shadow:0 4px 14px -2px rgba(255,90,31,.8), 0 0 0 4px var(--black);
+    cursor:pointer;
+    border:none;
+  }
+  input[type="range"].big-slider::-moz-range-thumb{
+    width:26px; height:26px; border-radius:50%;
+    background:linear-gradient(135deg, var(--orange-3), var(--orange));
+    box-shadow:0 4px 14px -2px rgba(255,90,31,.8), 0 0 0 4px var(--black);
+    cursor:pointer; border:none;
+  }
+  .scale-ticks{
+    display:flex; justify-content:space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px; color:var(--text-dim); margin-top:8px; opacity:.6;
+  }
+
+  .choice-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .choice-btn{
+    background:var(--surface); border:1px solid var(--line); color:var(--text);
+    border-radius:12px; padding:18px 12px; font-family:'Inter', sans-serif; font-size:14px;
+    cursor:pointer; transition:all .18s ease; text-align:left;
+  }
+  .choice-btn:hover{ border-color:rgba(255,90,31,.4); }
+  .choice-btn.selected{ background:var(--orange-soft); border-color:var(--orange); color:#fff; }
+
+  .unit-toggle{
+    display:inline-flex; background:var(--surface); border:1px solid var(--line);
+    border-radius:10px; padding:3px; margin-bottom:24px;
+  }
+  .unit-toggle button{
+    background:transparent; border:none; color:var(--text-dim);
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:7px 14px;
+    border-radius:7px; cursor:pointer; letter-spacing:.05em;
+  }
+  .unit-toggle button.active{ background:var(--orange); color:#0a0a0b; font-weight:600; }
+
+  .setup-footer{
+    padding:16px 24px 28px; display:flex; gap:12px; justify-content:space-between;
+    max-width:340px; width:100%; margin:0 auto; flex-shrink:0;
+  }
+  .btn{
+    border:none; border-radius:12px; padding:15px 22px; font-family:'Inter', sans-serif;
+    font-weight:600; font-size:15px; cursor:pointer; transition:transform .12s ease, opacity .12s ease;
+  }
+  .btn:active{ transform:scale(.97); }
+  .btn-primary{
+    background:linear-gradient(135deg, var(--orange-3), var(--orange)); color:#0a0a0b; flex:1;
+    box-shadow:0 8px 24px -8px rgba(255,90,31,.6);
+  }
+  .btn-primary:disabled{ opacity:.35; box-shadow:none; cursor:not-allowed; }
+  .btn-ghost{ background:transparent; color:var(--text-dim); border:1px solid var(--line); }
+  .btn-ghost.invisible{ visibility:hidden; }
+
+  /* ===== DASHBOARD ===== */
+  #dashboard-screen{ padding-bottom:30px; }
+  .dash-header{ display:flex; justify-content:space-between; align-items:flex-start; padding:30px 20px 4px; flex-shrink:0; }
+  .dash-greeting{ color:var(--text-dim); font-size:13px; margin-bottom:4px; }
+  .dash-date{ font-family:'Space Grotesk', sans-serif; font-size:23px; font-weight:600; }
+  .dash-date .accent{ color:var(--orange-3); }
+  .avatar{
+    width:40px; height:40px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif;
+    font-weight:600; color:var(--orange-3); flex-shrink:0;
+  }
+
+  .day-slider{ display:flex; gap:7px; overflow-x:auto; padding:16px 20px 18px; scroll-snap-type:x proximate; flex-shrink:0; }
+  .day-slider::-webkit-scrollbar{ display:none; }
+  .day-pill{
+    flex-shrink:0; width:46px; padding:9px 0; border-radius:13px; background:var(--surface);
+    border:1px solid var(--line); text-align:center; cursor:pointer; scroll-snap-align:center;
+    transition:all .18s ease;
+  }
+  .day-pill .dow{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--text-dim); letter-spacing:.06em; margin-bottom:5px; display:block; }
+  .day-pill .num{ font-family:'Space Grotesk', sans-serif; font-size:15px; font-weight:600; }
+  .day-pill.selected{ background:linear-gradient(150deg, var(--orange-3), var(--orange)); border-color:transparent; box-shadow:0 8px 20px -6px rgba(255,90,31,.55); }
+  .day-pill.selected .dow, .day-pill.selected .num{ color:#0a0a0b; }
+
+  .rings-row{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:4px 14px 6px; flex-shrink:0; }
+  .ring-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:18px;
+    padding:14px 6px 14px; display:flex; flex-direction:column; align-items:center; text-align:center;
+  }
+  .ring-label{ font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px; }
+  .ring-wrap{ position:relative; width:82px; height:82px; margin-bottom:8px; }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); display:block; }
+  .ring-wrap circle{ fill:none; }
+  .ring-value{ position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring-value .num{ font-family:'Space Grotesk', sans-serif; font-size:19px; font-weight:700; }
+  .ring-value .unit{ font-size:9px; color:var(--text-dim); margin-top:0px; }
+
+  .zone-legend{ display:flex; gap:5px; }
+  .zone-pill{
+    font-family:'JetBrains Mono', monospace; font-size:8.5px; letter-spacing:.02em;
+    padding:3px 6px; border-radius:6px; color:var(--text-dim); background:var(--surface-2);
+    opacity:.55; transition:all .2s;
+  }
+  .zone-pill.active{ opacity:1; color:#0a0a0b; font-weight:700; }
+  .zone-pill.active.z-low{ background:var(--zone-low); color:#fff; }
+  .zone-pill.active.z-avg{ background:var(--zone-avg); }
+  .zone-pill.active.z-high{ background:var(--zone-high); }
+
+  .section-title{
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--orange-3); padding:22px 20px 10px; display:flex; align-items:center; gap:8px;
+  }
+  .section-title::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+  .metrics-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:9px; padding:0 16px; }
+  .metric-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:15px; padding:14px 14px 12px;
+    position:relative; overflow:hidden;
+  }
+  .metric-card::after{ content:''; position:absolute; right:-20px; top:-20px; width:60px; height:60px; background:radial-gradient(circle, rgba(255,90,31,.10), transparent 70%); }
+  .metric-name{ font-size:11.5px; color:var(--text-dim); margin-bottom:9px; }
+  .metric-value{ font-family:'JetBrains Mono', monospace; font-size:21px; font-weight:600; color:var(--text); }
+  .metric-value .u{ font-size:12px; color:var(--text-dim); font-weight:400; margin-left:3px; }
+
+  .sleep-stage-card{ grid-column:span 2; background:var(--surface); border:1px solid var(--line); border-radius:15px; padding:14px 14px 16px; }
+  .stage-bar{ display:flex; width:100%; height:9px; border-radius:6px; overflow:hidden; margin:10px 0 11px; background:var(--surface-2); }
+  .stage-bar div{ height:100%; }
+  .stage-legend{ display:flex; gap:12px; flex-wrap:wrap; }
+  .stage-legend span{ font-size:10.5px; color:var(--text-dim); display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono', monospace; }
+  .stage-legend i{ width:7px; height:7px; border-radius:50%; display:inline-block; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+<div class="notch"></div>
+<div id="app">
+
+  <!-- ============ SETUP SCREEN ============ -->
+  <div id="setup-screen" class="screen active">
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+
+    <div class="setup-body">
+      <div class="setup-card">
+
+        <div class="step active" data-step="0">
+          <div class="step-eyebrow">Step 1 / 5</div>
+          <div class="step-title">What's your name?</div>
+          <div class="step-sub">We'll use this to personalize your dashboard.</div>
+          <div class="field">
+            <label>FIRST NAME</label>
+            <input type="text" id="inputName" placeholder="e.g. Alex" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="step" data-step="1">
+          <div class="step-eyebrow">Step 2 / 5</div>
+          <div class="step-title">How old are you?</div>
+          <div class="step-sub">Age helps us calibrate recovery and strain baselines.</div>
+          <div class="slider-display">
+            <span class="big-num" id="ageDisplay">25</span>
+            <span class="big-unit">years old</span>
+          </div>
+          <input type="range" class="big-slider" id="inputAge" min="13" max="80" value="25">
+          <div class="scale-ticks"><span>13</span><span>80</span></div>
+        </div>
+
+        <div class="step" data-step="2">
+          <div class="step-eyebrow">Step 3 / 5</div>
+          <div class="step-title">What's your gender?</div>
+          <div class="step-sub">Used to fine-tune metric ranges like resting heart rate.</div>
+          <div class="choice-grid" id="genderGrid">
+            <button class="choice-btn" data-val="Female">Female</button>
+            <button class="choice-btn" data-val="Male">Male</button>
+            <button class="choice-btn" data-val="Non-binary">Non-binary</button>
+            <button class="choice-btn" data-val="Prefer not to say">Prefer not to say</button>
+          </div>
+        </div>
+
+        <div class="step" data-step="3">
+          <div class="step-eyebrow">Step 4 / 5</div>
+          <div class="step-title">Height &amp; weight</div>
+          <div class="step-sub">This helps us personalize calorie and strain calculations.</div>
+          <div class="unit-toggle" id="unitToggle">
+            <button class="active" data-unit="metric">METRIC</button>
+            <button data-unit="imperial">IMPERIAL</button>
+          </div>
+
+          <div class="slider-block">
+            <div class="slider-label"><span>HEIGHT</span><b id="heightLabelVal">170 cm</b></div>
+            <input type="range" class="big-slider" id="inputHeight" min="140" max="210" value="170">
+          </div>
+          <div class="slider-block">
+            <div class="slider-label"><span>WEIGHT</span><b id="weightLabelVal">70 kg</b></div>
+            <input type="range" class="big-slider" id="inputWeight" min="40" max="160" value="70">
+          </div>
+        </div>
+
+        <div class="step" data-step="4">
+          <div class="step-eyebrow">Step 5 / 5</div>
+          <div class="step-title" id="reviewTitle">You're all set.</div>
+          <div class="step-sub">Here's what we've got. Tap finish to see your dashboard.</div>
+          <div id="reviewBox" style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text-dim);line-height:1.9;"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="setup-footer">
+      <button class="btn btn-ghost invisible" id="backBtn">Back</button>
+      <button class="btn btn-primary" id="nextBtn">Next</button>
+    </div>
+  </div>
+
+  <!-- ============ DASHBOARD SCREEN ============ -->
+  <div id="dashboard-screen" class="screen">
+    <div class="dash-header">
+      <div>
+        <div class="dash-greeting" id="dashGreeting">Welcome back</div>
+        <div class="dash-date" id="dashDate">Today, <span class="accent">Jun 25</span></div>
+      </div>
+      <div class="avatar" id="avatarInitial">A</div>
+    </div>
+
+    <div class="day-slider" id="daySlider"></div>
+
+    <div class="rings-row" id="ringsRow"></div>
+
+    <div id="categorySections"></div>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+/* ============== STATE ============== */
+const state = {
+  step: 0,
+  totalSteps: 5,
+  unit: 'metric',
+  user: { name:'', age:25, gender:'', height:170, weight:70 },
+  selectedDayOffset: 0
+};
+
+const ABBR_DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* ============== SLIDER FILL HELPER ============== */
+function fillSlider(input){
+  const min = +input.min, max = +input.max, val = +input.value;
+  const pct = ((val - min) / (max - min)) * 100;
+  input.style.background = `linear-gradient(to right, var(--orange) 0%, var(--orange) ${pct}%, var(--surface-2) ${pct}%, var(--surface-2) 100%)`;
+}
+
+/* ============== SETUP FLOW ============== */
+const stepsEls = document.querySelectorAll('.step');
+const progressFill = document.getElementById('progressFill');
+const nextBtn = document.getElementById('nextBtn');
+const backBtn = document.getElementById('backBtn');
+
+function updateProgress(){
+  const pct = ((state.step+1) / state.totalSteps) * 100;
+  progressFill.style.width = pct + '%';
+}
+
+function showStep(i){
+  stepsEls.forEach(s => s.classList.toggle('active', +s.dataset.step === i));
+  backBtn.classList.toggle('invisible', i === 0);
+  nextBtn.textContent = (i === state.totalSteps-1) ? 'Finish' : 'Next';
+  validateStep();
+  updateProgress();
+  if(i === 4) buildReview();
+}
+
+function validateStep(){
+  let valid = false;
+  switch(state.step){
+    case 0: valid = document.getElementById('inputName').value.trim().length > 0; break;
+    case 1: valid = true; break;
+    case 2: valid = !!state.user.gender; break;
+    case 3: valid = true; break;
+    case 4: valid = true; break;
+  }
+  nextBtn.disabled = !valid;
+}
+
+document.getElementById('inputName').addEventListener('input', e => { state.user.name = e.target.value.trim(); validateStep(); });
+
+const ageSlider = document.getElementById('inputAge');
+ageSlider.addEventListener('input', e => {
+  state.user.age = +e.target.value;
+  document.getElementById('ageDisplay').textContent = e.target.value;
+  fillSlider(ageSlider);
+});
+fillSlider(ageSlider);
+
+document.getElementById('genderGrid').addEventListener('click', e => {
+  const btn = e.target.closest('.choice-btn');
+  if(!btn) return;
+  document.querySelectorAll('#genderGrid .choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.user.gender = btn.dataset.val;
+  validateStep();
+});
+
+const heightSlider = document.getElementById('inputHeight');
+const weightSlider = document.getElementById('inputWeight');
+
+function refreshHeightWeightLabels(){
+  const hUnit = state.unit === 'metric' ? 'cm' : 'in';
+  const wUnit = state.unit === 'metric' ? 'kg' : 'lb';
+  document.getElementById('heightLabelVal').textContent = `${heightSlider.value} ${hUnit}`;
+  document.getElementById('weightLabelVal').textContent = `${weightSlider.value} ${wUnit}`;
+}
+
+heightSlider.addEventListener('input', () => {
+  state.user.height = state.unit === 'metric' ? +heightSlider.value : Math.round(+heightSlider.value * 2.54);
+  refreshHeightWeightLabels();
+  fillSlider(heightSlider);
+});
+weightSlider.addEventListener('input', () => {
+  state.user.weight = state.unit === 'metric' ? +weightSlider.value : Math.round(+weightSlider.value / 2.20462);
+  refreshHeightWeightLabels();
+  fillSlider(weightSlider);
+});
+fillSlider(heightSlider); fillSlider(weightSlider);
+
+document.getElementById('unitToggle').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#unitToggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const newUnit = btn.dataset.unit;
+  if(newUnit === state.unit) return;
+  state.unit = newUnit;
+
+  if(state.unit === 'imperial'){
+    heightSlider.min = 55; heightSlider.max = 83;
+    heightSlider.value = Math.round(state.user.height / 2.54);
+    weightSlider.min = 90; weightSlider.max = 350;
+    weightSlider.value = Math.round(state.user.weight * 2.20462);
+  } else {
+    heightSlider.min = 140; heightSlider.max = 210;
+    heightSlider.value = state.user.height;
+    weightSlider.min = 40; weightSlider.max = 160;
+    weightSlider.value = state.user.weight;
+  }
+  refreshHeightWeightLabels();
+  fillSlider(heightSlider); fillSlider(weightSlider);
+});
+
+function buildReview(){
+  const u = state.user;
+  document.getElementById('reviewTitle').textContent = `You're all set, ${u.name || 'there'}.`;
+  document.getElementById('reviewBox').innerHTML = `
+    NAME &nbsp;&nbsp;&nbsp;${u.name}<br>
+    AGE &nbsp;&nbsp;&nbsp;&nbsp;${u.age}<br>
+    GENDER &nbsp;${u.gender}<br>
+    HEIGHT &nbsp;${u.height} cm<br>
+    WEIGHT &nbsp;${u.weight} kg
+  `;
+}
+
+nextBtn.addEventListener('click', () => {
+  if(state.step === state.totalSteps - 1){ finishSetup(); return; }
+  state.step++;
+  showStep(state.step);
+});
+backBtn.addEventListener('click', () => {
+  if(state.step === 0) return;
+  state.step--;
+  showStep(state.step);
+});
+
+function finishSetup(){
+  document.getElementById('setup-screen').classList.remove('active');
+  document.getElementById('dashboard-screen').classList.add('active');
+  initDashboard();
+}
+
+showStep(0);
+
+/* ============== DASHBOARD DATA ============== */
+function seededRandom(seedStr){
+  let h = 0;
+  for(let i=0;i<seedStr.length;i++){ h = Math.imul(31, h) + seedStr.charCodeAt(i) | 0; }
+  return function(){
+    h = Math.imul(h ^ (h >>> 15), h | 1);
+    h ^= h + Math.imul(h ^ (h >>> 7), h | 61);
+    return ((h ^ (h >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function dateFromOffset(offset){
+  const d = new Date(2026, 5, 25);
+  d.setDate(d.getDate() + offset);
+  return d;
+}
+
+const dataCache = {};
+function getDataForOffset(offset){
+  if(dataCache[offset]) return dataCache[offset];
+  const d = dateFromOffset(offset);
+  const key = d.toISOString().slice(0,10);
+  const rand = seededRandom(key);
+  const data = {
+    strain: +(rand() * 18 + 2).toFixed(1),
+    recovery: Math.round(rand() * 60 + 30),
+    sleepPerf: Math.round(rand() * 35 + 60),
+    hrv: Math.round(rand() * 40 + 35),
+    rhr: Math.round(rand() * 18 + 48),
+    spo2: Math.round(rand() * 3 + 96),
+    skinTemp: +(rand() * 1.4 + 32.6).toFixed(1),
+    respRate: +(rand() * 4 + 13).toFixed(1),
+    calories: Math.round(rand() * 900 + 1800),
+    steps: Math.round(rand() * 7000 + 3000),
+    sleepTotalMin: Math.round(rand() * 120 + 360),
+    lightPct: 0.45 + rand()*0.1,
+    deepPct: 0.18 + rand()*0.08
+  };
+  data.remPct = 1 - data.lightPct - data.deepPct;
+  dataCache[offset] = data;
+  return data;
+}
+
+const RING_DEFS = [
+  { key:'strain', max:21, color: { low:'var(--zone-low)', avg:'var(--zone-avg)', high:'var(--zone-high)' }, label:'Strain', svgId:'Strain', fmt:v=>v.toFixed(1), unit:'/ 21' },
+  { key:'recovery', max:100, label:'Recovery', svgId:'Recovery', fmt:v=>Math.round(v), unit:'%' },
+  { key:'sleepPerf', max:100, label:'Sleep', svgId:'Sleep', fmt:v=>Math.round(v), unit:'%' }
+];
+
+function getZoneStats(metricKey, excludeOffset){
+  const vals = [];
+  for(let o=-13; o<=0; o++){
+    if(o === excludeOffset) continue;
+    vals.push(getDataForOffset(o)[metricKey]);
+  }
+  const mean = vals.reduce((a,b)=>a+b,0) / vals.length;
+  const variance = vals.reduce((a,b)=>a+(b-mean)*(b-mean),0) / vals.length;
+  const std = Math.sqrt(variance);
+  return { mean, std };
+}
+
+function buildRingsRow(){
+  const wrap = document.getElementById('ringsRow');
+  wrap.innerHTML = RING_DEFS.map(r => `
+    <div class="ring-card">
+      <div class="ring-label">${r.label}</div>
+      <div class="ring-wrap">
+        <svg viewBox="0 0 100 100">
+          <circle id="zoneHigh_${r.svgId}" cx="50" cy="50" r="42" stroke-width="9" stroke="var(--zone-high)" stroke-linecap="round"></circle>
+          <circle id="zoneAvg_${r.svgId}" cx="50" cy="50" r="42" stroke-width="9" stroke="var(--zone-avg)" stroke-linecap="round"></circle>
+          <circle id="zoneLow_${r.svgId}" cx="50" cy="50" r="42" stroke-width="9" stroke="var(--zone-low)" stroke-linecap="round"></circle>
+          <circle id="marker_${r.svgId}" r="4.5" fill="#0a0a0b" stroke="#fff" stroke-width="2"></circle>
+        </svg>
+        <div class="ring-value"><span class="num" id="num_${r.svgId}">0</span><span class="unit">${r.unit}</span></div>
+      </div>
+      <div class="zone-legend" id="legend_${r.svgId}">
+        <span class="zone-pill z-low">Low</span>
+        <span class="zone-pill z-avg">Avg</span>
+        <span class="zone-pill z-high">High</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setZoneRing(svgId, value, max, mean, std){
+  const r = 42;
+  const C = 2 * Math.PI * r;
+  let lowBound, highBound;
+  if(std > 0.001){
+    lowBound = mean - 0.5*std;
+    highBound = mean + 0.5*std;
+  } else {
+    lowBound = max * 0.33;
+    highBound = max * 0.67;
+  }
+  lowBound = Math.max(0, Math.min(max, lowBound));
+  highBound = Math.max(lowBound, Math.min(max, highBound));
+
+  const pctHigh = highBound / max;
+  const pctLow = lowBound / max;
+
+  const elHigh = document.getElementById('zoneHigh_'+svgId);
+  const elAvg = document.getElementById('zoneAvg_'+svgId);
+  const elLow = document.getElementById('zoneLow_'+svgId);
+
+  [elHigh, elAvg, elLow].forEach(el => el.style.strokeDasharray = C);
+  elHigh.style.strokeDashoffset = C * (1 - 1);
+  requestAnimationFrame(() => {
+    elHigh.style.transition = 'stroke-dashoffset 1s cubic-bezier(.65,0,.35,1)';
+    elAvg.style.transition = 'stroke-dashoffset 1s cubic-bezier(.65,0,.35,1)';
+    elLow.style.transition = 'stroke-dashoffset 1s cubic-bezier(.65,0,.35,1)';
+    elHigh.style.strokeDashoffset = C * (1 - 1);
+    elAvg.style.strokeDashoffset = C * (1 - pctHigh);
+    elLow.style.strokeDashoffset = C * (1 - pctLow);
+  });
+
+  // marker position at current value
+  const pctVal = Math.max(0, Math.min(1, value / max));
+  const angle = pctVal * 2 * Math.PI;
+  const mx = 50 + r * Math.cos(angle);
+  const my = 50 + r * Math.sin(angle);
+  const marker = document.getElementById('marker_'+svgId);
+  marker.setAttribute('cx', mx);
+  marker.setAttribute('cy', my);
+
+  // zone classification
+  let zone = 'avg';
+  if(value < lowBound) zone = 'low';
+  else if(value > highBound) zone = 'high';
+
+  const legend = document.getElementById('legend_'+svgId);
+  legend.querySelectorAll('.zone-pill').forEach(p => p.classList.remove('active'));
+  const target = legend.querySelector(zone === 'low' ? '.z-low' : zone === 'high' ? '.z-high' : '.z-avg');
+  target.classList.add('active');
+}
+
+function renderDaySlider(){
+  const wrap = document.getElementById('daySlider');
+  wrap.innerHTML = '';
+  for(let offset = -13; offset <= 0; offset++){
+    const d = dateFromOffset(offset);
+    const pill = document.createElement('div');
+    pill.className = 'day-pill' + (offset === state.selectedDayOffset ? ' selected' : '');
+    pill.innerHTML = `<span class="dow">${ABBR_DOW[d.getDay()]}</span><span class="num">${d.getDate()}</span>`;
+    pill.addEventListener('click', () => {
+      state.selectedDayOffset = offset;
+      renderDaySlider();
+      renderDashboardData();
+    });
+    wrap.appendChild(pill);
+  }
+  requestAnimationFrame(() => {
+    const sel = wrap.querySelector('.day-pill.selected');
+    if(sel) sel.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  });
+}
+
+function buildCategorySections(){
+  document.getElementById('categorySections').innerHTML = `
+    <div class="section-title">Heart &amp; vitals</div>
+    <div class="metrics-grid" id="grid-heart"></div>
+
+    <div class="section-title">Activity</div>
+    <div class="metrics-grid" id="grid-activity"></div>
+
+    <div class="section-title">Sleep</div>
+    <div class="metrics-grid" id="grid-sleep"></div>
+  `;
+}
+
+function renderDashboardData(){
+  const d = dateFromOffset(state.selectedDayOffset);
+  const data = getDataForOffset(state.selectedDayOffset);
+
+  const dateLabel = state.selectedDayOffset === 0
+    ? `Today, <span class="accent">${MONTHS[d.getMonth()]} ${d.getDate()}</span>`
+    : `${ABBR_DOW[d.getDay()]}, <span class="accent">${MONTHS[d.getMonth()]} ${d.getDate()}</span>`;
+  document.getElementById('dashDate').innerHTML = dateLabel;
+
+  RING_DEFS.forEach(r => {
+    const val = data[r.key];
+    document.getElementById('num_'+r.svgId).textContent = r.fmt(val);
+    const stats = getZoneStats(r.key, state.selectedDayOffset);
+    setZoneRing(r.svgId, val, r.max, stats.mean, stats.std);
+  });
+
+  const hrs = Math.floor(data.sleepTotalMin/60);
+  const mins = data.sleepTotalMin % 60;
+  const lightMin = Math.round(data.sleepTotalMin * data.lightPct);
+  const deepMin = Math.round(data.sleepTotalMin * data.deepPct);
+  const remMin = data.sleepTotalMin - lightMin - deepMin;
+
+  document.getElementById('grid-heart').innerHTML = `
+    <div class="metric-card"><div class="metric-name">Heart Rate Variability</div><div class="metric-value">${data.hrv}<span class="u">ms</span></div></div>
+    <div class="metric-card"><div class="metric-name">Resting Heart Rate</div><div class="metric-value">${data.rhr}<span class="u">bpm</span></div></div>
+    <div class="metric-card"><div class="metric-name">Blood Oxygen</div><div class="metric-value">${data.spo2}<span class="u">%</span></div></div>
+    <div class="metric-card"><div class="metric-name">Respiratory Rate</div><div class="metric-value">${data.respRate}<span class="u">rpm</span></div></div>
+    <div class="metric-card"><div class="metric-name">Skin Temperature</div><div class="metric-value">${data.skinTemp}<span class="u">°C</span></div></div>
+  `;
+
+  document.getElementById('grid-activity').innerHTML = `
+    <div class="metric-card"><div class="metric-name">Calories Burned</div><div class="metric-value">${data.calories.toLocaleString()}<span class="u">kcal</span></div></div>
+    <div class="metric-card"><div class="metric-name">Steps</div><div class="metric-value">${data.steps.toLocaleString()}</div></div>
+  `;
+
+  document.getElementById('grid-sleep').innerHTML = `
+    <div class="metric-card"><div class="metric-name">Time Asleep</div><div class="metric-value">${hrs}<span class="u">h</span> ${mins}<span class="u">m</span></div></div>
+    <div class="metric-card"><div class="metric-name">Sleep Performance</div><div class="metric-value">${data.sleepPerf}<span class="u">%</span></div></div>
+    <div class="sleep-stage-card">
+      <div class="metric-name">Sleep stages</div>
+      <div class="stage-bar">
+        <div style="width:${data.lightPct*100}%; background:#ffd9b8;"></div>
+        <div style="width:${data.remPct*100}%; background:var(--orange-3);"></div>
+        <div style="width:${data.deepPct*100}%; background:var(--orange);"></div>
+      </div>
+      <div class="stage-legend">
+        <span><i style="background:#ffd9b8;"></i> Light · ${lightMin}m</span>
+        <span><i style="background:var(--orange-3);"></i> REM · ${remMin}m</span>
+        <span><i style="background:var(--orange);"></i> Deep · ${deepMin}m</span>
+      </div>
+    </div>
+  `;
+}
+
+function initDashboard(){
+  const u = state.user;
+  document.getElementById('dashGreeting').textContent = `Welcome back, ${u.name || 'there'}`;
+  document.getElementById('avatarInitial').textContent = (u.name || 'A').charAt(0).toUpperCase();
+  buildRingsRow();
+  buildCategorySections();
+  renderDaySlider();
+  renderDashboardData();
+}
+</script>
+</body>
+</html>
