@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FitPulse — Fitness Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #000000;
+    --bg-secondary: #0d0d0f;
+    --bg-card: #141416;
+    --bg-card-alt: #1a1a1d;
+    --bg-glass: rgba(30, 30, 35, 0.7);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-light: rgba(255, 255, 255, 0.1);
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --accent-primary: #10b981;
+    --accent-secondary: #34d399;
+    --accent-gradient: linear-gradient(135deg, #10b981, #06b6d4);
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --purple: #8b5cf6;
+    --pink: #ec4899;
+    --orange: #f97316;
+    --dot-color: rgba(16, 185, 129, 0.3);
+    --safe-top: env(safe-area-inset-top, 44px);
+    --safe-bottom: env(safe-area-inset-bottom, 34px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  
+  html, body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 12px;
+  }
+
+  /* ===== PHONE FRAME ===== */
+  .phone-frame {
+    width: 390px;
+    height: 844px;
+    background: var(--bg-primary);
+    border-radius: 52px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 
+      0 0 0 8px #0a0a0a,
+      0 40px 100px -30px rgba(16, 185, 129, 0.2),
+      0 0 80px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    position: relative;
+    background-image: 
+      radial-gradient(ellipse at 20% -10%, rgba(16, 185, 129, 0.08), transparent 50%),
+      radial-gradient(ellipse at 100% 10%, rgba(6, 182, 212, 0.06), transparent 45%);
+  }
+
+  .notch {
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 150px; height: 30px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    z-index: 100;
+  }
+
+  .dynamic-island {
+    position: absolute;
+    top: 8px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 35px;
+    background: #000;
+    border-radius: 18px;
+    z-index: 101;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #app { height: 100%; width: 100%; position: relative; overflow: hidden; }
+  
+  .screen {
+    display: none;
+    height: calc(100% - 88px);
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-top: calc(var(--safe-top) + 20px);
+    padding-bottom: 20px;
+  }
+  
+  .screen::-webkit-scrollbar { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.3s ease; }
+  
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 430px) {
+    body { padding: 0; background: #000; }
+    .phone-frame { width: 100vw; height: 100vh; border-radius: 0; border: none; box-shadow: none; }
+  }
+
+  /* ===== BOTTOM NAVIGATION ===== */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(88px + var(--safe-bottom));
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    padding-top: 12px;
+    padding-bottom: var(--safe-bottom);
+    z-index: 100;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .nav-item:hover { background: rgba(255, 255, 255, 0.05); }
+  
+  .nav-item.active {
+    color: var(--accent-primary);
+    background: rgba(16, 185, 129, 0.1);
+  }
+
+  .nav-icon {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  /* ===== HOME SCREEN ===== */
+  .home-header {
+    padding: 0 20px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .greeting-section h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .greeting-section p {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .date-badge {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 8px 14px;
+    text-align: center;
+  }
+
+  .date-badge .day {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .date-badge .num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  /* Activity Rings */
+  .activity-section {
+    padding: 0 20px 20px;
+  }
+
+  .rings-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: 24px;
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 16px;
+  }
+
+  .ring-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+  }
+
+  .ring-svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+  }
+
+  .ring-bg {
+    fill: none;
+    stroke: var(--bg-card-alt);
+    stroke-width: 8;
+  }
+
+  .ring-progress {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+  }
+
+  .ring-move { stroke: var(--accent-gradient); }
+  .ring-exercise { stroke: var(--danger); }
+  .ring-stand { stroke: var(--info); }
+
+  .ring-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .ring-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .ring-unit {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* Dot Matrix Metrics Grid */
+  .metrics-section {
+    padding: 0 16px;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+
+  .section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-secondary);
+  }
+
+  .see-all {
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .see-all:hover { color: var(--accent-primary); }
+
+  .dot-matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .dot-metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: pointer;
+  }
+
+  .dot-metric-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  .dot-metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background-image: 
+      radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+    background-size: 8px 8px;
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  .dot-metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .dot-metric-name {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .dot-metric-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .icon-green { background: rgba(16, 185, 129, 0.15); color: var(--accent-primary); }
+  .icon-blue { background: rgba(59, 130, 246, 0.15); color: var(--info); }
+  .icon-orange { background: rgba(249, 115, 22, 0.15); color: var(--orange); }
+  .icon-purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); }
+  .icon-pink { background: rgba(236, 72, 153, 0.15); color: var(--pink); }
+  .icon-red { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+  .dot-metric-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+  }
+
+  .dot-metric-value .unit {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  .dot-metric-trend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 11px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .trend-up { color: var(--accent-primary); }
+  .trend-down { color: var(--danger); }
+  .trend-neutral { color: var(--text-muted); }
+
+  /* Sleep Cycle Visualization */
+  .sleep-section {
+    padding: 20px;
+    margin: 16px;
+    background: var(--bg-card);
+    border-radius: 24px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .sleep-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .sleep-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .sleep-score {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .score-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #000;
+  }
+
+  .sleep-waveform {
+    height: 120px;
+    position: relative;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .waveform-canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .sleep-stages {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .stage-item {
+    flex: 1;
+    text-align: center;
+    padding: 12px 8px;
+    background: var(--bg-card-alt);
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .stage-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin: 0 auto 6px;
+  }
+
+  .stage-awake { background: var(--danger); }
+  .stage-rem { background: var(--purple); }
+  .stage-light { background: var(--info); }
+  .stage-deep { background: var(--accent-primary); }
+
+  .stage-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .stage-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* ===== WELLNESS SCREEN ===== */
+  .wellness-header {
+    padding: 0 20px 20px;
+    text-align: center;
+  }
+
+  .wellness-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .wellness-header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .mood-tracker {
+    padding: 0 20px 20px;
+  }
+
+  .mood-question {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .mood-options {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mood-btn {
+    flex: 1;
+    padding: 16px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mood-btn:hover {
+    border-color: var(--accent-primary);
+    background: rgba(16, 185, 129, 0.05);
+  }
+
+  .mood-btn.selected {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--accent-primary);
+  }
+
+  .mood-emoji {
+    font-size: 28px;
+  }
+
+  .mood-label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .mindfulness-card {
+    margin: 0 20px 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.1));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 20px;
+  }
+
+  .mindfulness-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .breath-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--purple);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .mindfulness-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .mindfulness-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  .breath-animation {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .breath-circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    opacity: 0.3;
+    animation: breathe 8s ease-in-out infinite;
+  }
+
+  .breath-circle:nth-child(1) { width: 40px; height: 40px; animation-delay: 0s; }
+  .breath-circle:nth-child(2) { width: 60px; height: 60px; animation-delay: 0.5s; }
+  .breath-circle:nth-child(3) { width: 80px; height: 80px; animation-delay: 1s; }
+
+  @keyframes breathe {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+    50% { transform: translate(-50%, -50%) scale(2); opacity: 0.1; }
+  }
+
+  .start-breathing {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent-gradient);
+    border: none;
+    border-radius: 12px;
+    color: #000;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+
+  .hydration-tracker {
+    margin: 0 20px 20px;
+    padding: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+  }
+
+  .hydration-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .hydration-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .hydration-goal {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .water-display {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .water-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--info);
+  }
+
+  .water-unit {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .water-glasses {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .glass {
+    width: 24px;
+    height: 32px;
+    border: 2px solid var(--border-light);
+    border-radius: 4px 4px 8px 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass.filled::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80%;
+    background: var(--info);
+    opacity: 0.6;
+  }
+
+  .add-water-btn {
+    width: 100%;
+    padding: 12px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid var(--info);
+    border-radius: 12px;
+    color: var(--info);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .add-water-btn:hover {
+    background: rgba(59, 130, 246, 0.25);
+  }
+
+  /* ===== AI SCREEN ===== */
+  .ai-header {
+    padding: 0 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ai-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .ai-info h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .ai-status {
+    font-size: 12px;
+    color: var(--accent-primary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px;
+    overflow: hidden;
+  }
+
+  .messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .messages-area::-webkit-scrollbar { display: none; }
+
+  .message {
+    max-width: 85%;
+    padding: 14px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: messageIn 0.3s ease;
+  }
+
+  @keyframes messageIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.ai {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px 20px 20px 4px;
+    align-self: flex-start;
+  }
+
+  .message.user {
+    background: var(--accent-gradient);
+    color: #000;
+    border-radius: 20px 20px 4px 20px;
+    align-self: flex-end;
+  }
+
+  .message-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 0;
+  }
+
+  .suggestion-chip {
+    padding: 8px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .suggestion-chip:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+
+  .input-area {
+    padding: 16px 0 0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    padding: 14px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .chat-input:focus {
+    border-color: var(--accent-primary);
+  }
+
+  .chat-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .send-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .send-btn:hover {
+    transform: scale(1.05);
+  }
+
+  .send-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: #000;
+    margin-left: 2px;
+  }
+
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 14px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    width: fit-content;
+  }
+
+  .typing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: typingBounce 1.4s ease-in-out infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-8px); opacity: 1; }
+  }
+
+  /* ===== PROFILE SCREEN ===== */
+  .profile-header {
+    padding: 0 20px 24px;
+    text-align: center;
+  }
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 40px;
+    font-weight: 700;
+    color: #000;
+    border: 4px solid var(--bg-card);
+  }
+
+  .profile-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .profile-member {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .profile-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 20px;
+    margin: 0 20px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-primary);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .profile-sections {
+    padding: 0 20px;
+  }
+
+  .profile-menu {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .menu-item:last-child {
+    border-bottom: none;
+  }
+
+  .menu-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .menu-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .menu-content {
+    flex: 1;
+  }
+
+  .menu-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .menu-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .menu-arrow {
+    color: var(--text-muted);
+    font-size: 18px;
+  }
+
+  .settings-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+  }
+
+  .toggle-switch {
+    width: 50px;
+    height: 28px;
+    background: var(--bg-card-alt);
+    border-radius: 14px;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .toggle-switch.active {
+    background: var(--accent-gradient);
+  }
+
+  .toggle-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+  }
+
+  .toggle-switch.active .toggle-knob {
+    transform: translateX(22px);
+  }
+
+  .logout-btn {
+    width: 100%;
+    padding: 16px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid var(--danger);
+    border-radius: 16px;
+    color: var(--danger);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .logout-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+  }
+
+  /* Accessibility descriptions */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  [aria-label] {
+    position: relative;
+  }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="notch"></div>
+  <div class="dynamic-island"></div>
+  
+  <div id="app">
+    
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="screen active">
+      <header class="home-header">
+        <div class="greeting-section">
+          <h1 id="greeting-text">Good Morning</h1>
+          <p id="user-name-display">Alex</p>
+        </div>
+        <div class="date-badge">
+          <div class="day" id="current-day">MON</div>
+          <div class="num" id="current-date">25</div>
+        </div>
+      </header>
+
+      <section class="activity-section" aria-label="Activity rings showing daily progress">
+        <div class="rings-container">
+          <div class="ring-wrapper">
+            <svg class="ring-svg" viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="42"/>
+              <circle class="ring-progress ring-move" cx="50" cy="50" r="42" 
+                stroke-dasharray="264" stroke-dashoffset="66" />
+            </svg>
+            <div class="ring-center">
+              <div class="ring-value">485</div>
+              <div class="ring-unit">kcal</div>
+            </div>
+          </div>
+          <div class="ring-wrapper">
+            <svg class="ring-svg" viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="42"/>
+              <circle class="ring-progress ring-exercise" cx="50" cy="50" r="42" 
+                stroke-dasharray="264" stroke-dashoffset="132" />
+            </svg>
+            <div class="ring-center">
+              <div class="ring-value">22</div>
+              <div class="ring-unit">min</div>
+            </div>
+          </div>
+          <div class="ring-wrapper">
+            <svg class="ring-svg" viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="42"/>
+              <circle class="ring-progress ring-stand" cx="50" cy="50" r="42" 
+                stroke-dasharray="264" stroke-dashoffset="53" />
+            </svg>
+            <div class="ring-center">
+              <div class="ring-value">8</div>
+              <div class="ring-unit">hrs</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics-section" aria-label="Health metrics dashboard">
+        <div class="section-header">
+          <span class="section-title">Vitals</span>
+          <span class="see-all" role="button" tabindex="0" aria-label="View all vitals">See All</span>
+        </div>
+        <div class="dot-matrix-grid">
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Heart rate: 72 beats per minute, down 3 from yesterday">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Heart Rate</span>
+              <div class="dot-metric-icon icon-red">♥</div>
+            </div>
+            <div class="dot-metric-value">72<span class="unit">bpm</span></div>
+            <div class="dot-metric-trend trend-down">↓ 3 vs yesterday</div>
+          </div>
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Blood oxygen: 98 percent, stable">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Blood O₂</span>
+              <div class="dot-metric-icon icon-blue">💧</div>
+            </div>
+            <div class="dot-metric-value">98<span class="unit">%</span></div>
+            <div class="dot-metric-trend trend-neutral">— Stable</div>
+          </div>
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="HRV: 45 milliseconds, up 5 from yesterday">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">HRV</span>
+              <div class="dot-metric-icon icon-purple">⚡</div>
+            </div>
+            <div class="dot-metric-value">45<span class="unit">ms</span></div>
+            <div class="dot-metric-trend trend-up">↑ 5 vs yesterday</div>
+          </div>
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Respiratory rate: 16 breaths per minute">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Resp. Rate</span>
+              <div class="dot-metric-icon icon-green">🌬️</div>
+            </div>
+            <div class="dot-metric-value">16<span class="unit">rpm</span></div>
+            <div class="dot-metric-trend trend-neutral">— Normal range</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics-section" aria-label="Activity metrics">
+        <div class="section-header">
+          <span class="section-title">Activity</span>
+          <span class="see-all" role="button" tabindex="0" aria-label="View all activity metrics">See All</span>
+        </div>
+        <div class="dot-matrix-grid">
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Steps taken: 8,432 steps today">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Steps</span>
+              <div class="dot-metric-icon icon-orange">👟</div>
+            </div>
+            <div class="dot-metric-value">8,432</div>
+            <div class="dot-metric-trend trend-up">↑ 1,200 vs avg</div>
+          </div>
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Calories burned: 2,150 kilocalories">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Calories</span>
+              <div class="dot-metric-icon icon-pink">🔥</div>
+            </div>
+            <div class="dot-metric-value">2,150<span class="unit">kcal</span></div>
+            <div class="dot-metric-trend trend-up">↑ 150 vs yesterday</div>
+          </div>
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Distance: 5.2 kilometers walked">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Distance</span>
+              <div class="dot-metric-icon icon-green">📍</div>
+            </div>
+            <div class="dot-metric-value">5.2<span class="unit">km</span></div>
+            <div class="dot-metric-trend trend-up">↑ 0.8 vs yesterday</div>
+          </div>
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Active energy: 485 kilocalories burned through activity">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Active Energy</span>
+              <div class="dot-metric-icon icon-orange">⚡</div>
+            </div>
+            <div class="dot-metric-value">485<span class="unit">kcal</span></div>
+            <div class="dot-metric-trend trend-neutral">— On track</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sleep-section" aria-label="Sleep analysis with detailed stages">
+        <div class="sleep-header">
+          <span class="sleep-title">Sleep Analysis</span>
+          <div class="sleep-score">
+            <span class="score-circle">85</span>
+          </div>
+        </div>
+        <div class="sleep-waveform">
+          <canvas id="sleepWaveform" class="waveform-canvas"></canvas>
+        </div>
+        <div class="sleep-stages">
+          <div class="stage-item">
+            <div class="stage-dot stage-awake"></div>
+            <div class="stage-label">Awake</div>
+            <div class="stage-value">45m</div>
+          </div>
+          <div class="stage-item">
+            <div class="stage-dot stage-rem"></div>
+            <div class="stage-label">REM</div>
+            <div class="stage-value">1h 52m</div>
+          </div>
+          <div class="stage-item">
+            <div class="stage-dot stage-light"></div>
+            <div class="stage-label">Light</div>
+            <div class="stage-value">4h 18m</div>
+          </div>
+          <div class="stage-item">
+            <div class="stage-dot stage-deep"></div>
+            <div class="stage-label">Deep</div>
+            <div class="stage-value">1h 45m</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- WELLNESS SCREEN -->
+    <div id="wellness-screen" class="screen">
+      <header class="wellness-header">
+        <h1>Wellness</h1>
+        <p>Track your mental & physical wellbeing</p>
+      </header>
+
+      <section class="mood-tracker" aria-label="Daily mood tracker">
+        <p class="mood-question">How are you feeling today?</p>
+        <div class="mood-options">
+          <button class="mood-btn" data-mood="great" aria-label="Feeling great">
+            <span class="mood-emoji">😊</span>
+            <span class="mood-label">Great</span>
+          </button>
+          <button class="mood-btn" data-mood="good" aria-label="Feeling good">
+            <span class="mood-emoji">🙂</span>
+            <span class="mood-label">Good</span>
+          </button>
+          <button class="mood-btn" data-mood="okay" aria-label="Feeling okay">
+            <span class="mood-emoji">😐</span>
+            <span class="mood-label">Okay</span>
+          </button>
+          <button class="mood-btn" data-mood="tired" aria-label="Feeling tired">
+            <span class="mood-emoji">😴</span>
+            <span class="mood-label">Tired</span>
+          </button>
+          <button class="mood-btn" data-mood="stressed" aria-label="Feeling stressed">
+            <span class="mood-emoji">😰</span>
+            <span class="mood-label">Stressed</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="mindfulness-card" aria-label="Breathing exercise for mindfulness">
+        <div class="mindfulness-header">
+          <div class="breath-icon">🧘</div>
+          <div>
+            <div class="mindfulness-title">Mindful Breathing</div>
+            <div class="mindfulness-desc">Take a moment to center yourself</div>
+          </div>
+        </div>
+        <div class="breath-animation">
+          <div class="breath-circle"></div>
+          <div class="breath-circle"></div>
+          <div class="breath-circle"></div>
+        </div>
+        <button class="start-breathing" aria-label="Start 2-minute breathing exercise">Start 2-Min Session</button>
+      </section>
+
+      <section class="hydration-tracker" aria-label="Daily water intake tracker">
+        <div class="hydration-header">
+          <span class="hydration-title">💧 Hydration</span>
+          <span class="hydration-goal">Goal: 8 glasses</span>
+        </div>
+        <div class="water-display">
+          <div>
+            <span class="water-count" id="waterCount">5</span>
+            <span class="water-unit">/ 8 glasses</span>
+          </div>
+        </div>
+        <div class="water-glasses" id="waterGlasses">
+          <div class="glass filled"></div>
+          <div class="glass filled"></div>
+          <div class="glass filled"></div>
+          <div class="glass filled"></div>
+          <div class="glass filled"></div>
+          <div class="glass"></div>
+          <div class="glass"></div>
+          <div class="glass"></div>
+        </div>
+        <button class="add-water-btn" id="addWaterBtn" aria-label="Add one glass of water">+ Add Glass</button>
+      </section>
+
+      <section class="metrics-section" aria-label="Additional wellness metrics">
+        <div class="section-header">
+          <span class="section-title">This Week</span>
+        </div>
+        <div class="dot-matrix-grid">
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Average sleep: 7 hours 30 minutes">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Avg Sleep</span>
+              <div class="dot-metric-icon icon-purple">🌙</div>
+            </div>
+            <div class="dot-metric-value">7h 30m</div>
+            <div class="dot-metric-trend trend-up">↑ 45m vs last week</div>
+          </div>
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Stress level: Low based on HRV data">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Stress Level</span>
+              <div class="dot-metric-icon icon-blue">🧠</div>
+            </div>
+            <div class="dot-metric-value">Low</div>
+            <div class="dot-metric-trend trend-up">↓ Improved</div>
+          </div>
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Energy level: 78 percent based on recovery metrics">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Energy</span>
+              <div class="dot-metric-icon icon-orange">⚡</div>
+            </div>
+            <div class="dot-metric-value">78<span class="unit">%</span></div>
+            <div class="dot-metric-trend trend-neutral">— Steady</div>
+          </div>
+          <div class="dot-metric-card" role="button" tabindex="0" aria-label="Recovery score: 82 percent ready for training">
+            <div class="dot-metric-header">
+              <span class="dot-metric-name">Recovery</span>
+              <div class="dot-metric-icon icon-green">💪</div>
+            </div>
+            <div class="dot-metric-value">82<span class="unit">%</span></div>
+            <div class="dot-metric-trend trend-up">↑ Ready to train</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- AI SCREEN -->
+    <div id="ai-screen" class="screen">
+      <header class="ai-header">
+        <div class="ai-avatar">🤖</div>
+        <div class="ai-info">
+          <h1>FitPulse AI</h1>
+          <div class="ai-status">
+            <span class="status-dot"></span>
+            Online & Ready
+          </div>
+        </div>
+      </header>
+
+      <div class="chat-container">
+        <div class="messages-area" id="messagesArea">
+          <div class="message ai">
+            Hi Alex! 👋 I'm your personal fitness assistant. I can help you with workout plans, nutrition advice, recovery tips, and answer any health-related questions. What would you like to know today?
+          </div>
+          <div class="message-suggestions">
+            <button class="suggestion-chip" data-query="Create a workout plan">Create a workout plan</button>
+            <button class="suggestion-chip" data-query="Nutrition tips">Nutrition tips</button>
+            <button class="suggestion-chip" data-query="How to improve sleep">How to improve sleep</button>
+            <button class="suggestion-chip" data-query="Recovery exercises">Recovery exercises</button>
+          </div>
+        </div>
+
+        <div class="input-area">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything about fitness..." aria-label="Type your question">
+          <button class="send-btn" id="sendBtn" aria-label="Send message">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE SCREEN -->
+    <div id="profile-screen" class="screen">
+      <header class="profile-header">
+        <div class="profile-avatar" id="profileAvatar">A</div>
+        <h1 class="profile-name" id="profileName">Alex Johnson</h1>
+        <p class="profile-member">Premium Member</p>
+      </header>
+
+      <section class="profile-stats" aria-label="Your fitness statistics">
+        <div class="stat-item">
+          <div class="stat-value">12</div>
+          <div class="stat-label">Day Streak</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">847</div>
+          <div class="stat-label">Workouts</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">284</div>
+          <div class="stat-label">Hours Active</div>
+        </div>
+      </section>
+
+      <section class="profile-sections">
+        <div class="profile-menu" aria-label="Profile settings menu">
+          <div class="menu-item" role="button" tabindex="0" aria-label="Edit your personal information">
+            <div class="menu-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-primary);">👤</div>
+            <div class="menu-content">
+              <div class="menu-title">Personal Info</div>
+              <div class="menu-subtitle">Age, weight, height</div>
+            </div>
+            <span class="menu-arrow">›</span>
+          </div>
+          <div class="menu-item" role="button" tabindex="0" aria-label="Set your fitness goals">
+            <div class="menu-icon" style="background: rgba(59, 130, 246, 0.15); color: var(--info);">🎯</div>
+            <div class="menu-content">
+              <div class="menu-title">Goals</div>
+              <div class="menu-subtitle">Daily targets & milestones</div>
+            </div>
+            <span class="menu-arrow">›</span>
+          </div>
+          <div class="menu-item" role="button" tabindex="0" aria-label="Connect fitness devices and apps">
+            <div class="menu-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--purple);">📱</div>
+            <div class="menu-content">
+              <div class="menu-title">Connected Apps</div>
+              <div class="menu-subtitle">Apple Health, Fitbit</div>
+            </div>
+            <span class="menu-arrow">›</span>
+          </div>
+          <div class="menu-item" role="button" tabindex="0" aria-label="Notification preferences">
+            <div class="menu-icon" style="background: rgba(249, 115, 22, 0.15); color: var(--orange);">🔔</div>
+            <div class="menu-content">
+              <div class="menu-title">Notifications</div>
+              <div class="menu-subtitle">Reminders & alerts</div>
+            </div>
+            <span class="menu-arrow">›</span>
+          </div>
+        </div>
+
+        <div class="profile-menu" aria-label="App settings">
+          <div class="settings-toggle" role="button" tabindex="0" aria-label="Toggle dark mode">
+            <div class="menu-content">
+              <div class="menu-title">Dark Mode</div>
+              <div class="menu-subtitle">Easier on the eyes</div>
+            </div>
+            <div class="toggle-switch active">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+          <div class="settings-toggle" role="button" tabindex="0" aria-label="Toggle workout reminders">
+            <div class="menu-content">
+              <div class="menu-title">Workout Reminders</div>
+              <div class="menu-subtitle">Daily motivation</div>
+            </div>
+            <div class="toggle-switch active">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+          <div class="settings-toggle" role="button" tabindex="0" aria-label="Toggle heart rate alerts">
+            <div class="menu-content">
+              <div class="menu-title">Heart Rate Alerts</div>
+              <div class="menu-subtitle">High/low notifications</div>
+            </div>
+            <div class="toggle-switch">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+          <div class="settings-toggle" role="button" tabindex="0" aria-label="Toggle data sharing">
+            <div class="menu-content">
+              <div class="menu-title">Data Sharing</div>
+              <div class="menu-subtitle">Share with healthcare</div>
+            </div>
+            <div class="toggle-switch">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="logout-btn" aria-label="Sign out of your account">Sign Out</button>
+        
+        <p style="text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px;">
+          FitPulse v2.0.1<br>
+          Made with ❤️ for your health
+        </p>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+    <a href="#" class="nav-item active" data-screen="home" aria-label="Home - View your dashboard" aria-current="page">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span class="nav-label">Home</span>
+    </a>
+    <a href="#" class="nav-item" data-screen="wellness" aria-label="Wellness - Track your wellbeing">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <span class="nav-label">Wellness</span>
+    </a>
+    <a href="#" class="nav-item" data-screen="ai" aria-label="AI Assistant - Get personalized fitness advice">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3"/></svg>
+      <span class="nav-label">AI</span>
+    </a>
+    <a href="#" class="nav-item" data-screen="profile" aria-label="Profile - Manage your account settings">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <span class="nav-label">Profile</span>
+    </a>
+  </nav>
+
+</div>
+
+<script>
+// ============== STATE MANAGEMENT ==============
+const state = {
+  currentScreen: 'home',
+  userName: 'Alex',
+  waterIntake: 5,
+  selectedMood: null,
+  chatHistory: []
+};
+
+// ============== NAVIGATION ==============
+const navItems = document.querySelectorAll('.nav-item');
+const screens = document.querySelectorAll('.screen');
+
+function switchScreen(screenName) {
+  // Update nav items
+  navItems.forEach(item => {
+    item.classList.toggle('active', item.dataset.screen === screenName);
+    if (item.dataset.screen === screenName) {
+      item.setAttribute('aria-current', 'page');
+    } else {
+      item.removeAttribute('aria-current');
+    }
+  });
+
+  // Update screens
+  screens.forEach(screen => {
+    screen.classList.toggle('active', screen.id === `${screenName}-screen`);
+  });
+
+  state.currentScreen = screenName;
+  
+  // Scroll to top
+  const activeScreen = document.getElementById(`${screenName}-screen`);
+  if (activeScreen) {
+    activeScreen.scrollTop = 0;
+  }
+}
+
+navItems.forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchScreen(item.dataset.screen);
+  });
+});
+
+// ============== DATE DISPLAY ==============
+function updateDate() {
+  const now = new Date();
+  const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const date = now.getDate();
+  
+  document.getElementById('current-day').textContent = days[now.getDay()];
+  document.getElementById('current-date').textContent = date;
+  
+  // Update greeting
+  const hour = now.getHours();
+  let greeting = 'Good Morning';
+  if (hour >= 12 && hour < 17) greeting = 'Good Afternoon';
+  else if (hour >= 17) greeting = 'Good Evening';
+  
+  document.getElementById('greeting-text').textContent = greeting;
+}
+
+updateDate();
+
+// ============== SLEEP WAVEFORM CANVAS ==============
+function drawSleepWaveform() {
+  const canvas = document.getElementById('sleepWaveform');
+  const ctx = canvas.getContext('2d');
+  
+  // Set canvas size
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  ctx.scale(2, 2);
+  
+  const width = rect.width;
+  const height = rect.height;
+  
+  // Clear canvas
+  ctx.clearRect(0, 0, width, height);
+  
+  // Generate sleep stages data
+  const stages = ['deep', 'light', 'rem', 'awake'];
+  const stageColors = {
+    deep: '#10b981',
+    light: '#3b82f6',
+    rem: '#8b5cf6',
+    awake: '#ef4444'
+  };
+  
+  // Draw waveform
+  const points = [];
+  for (let i = 0; i <= width; i += 2) {
+    const t = i / width;
+    const baseHeight = height / 2;
+    const amplitude = 20 + Math.sin(t * Math.PI * 4) * 10;
+    const frequency = t * 10;
+    const y = baseHeight + Math.sin(frequency) * amplitude * Math.sin(t * Math.PI);
+    points.push({ x: i, y });
+  }
+  
+  // Draw gradient fill
+  const gradient = ctx.createLinearGradient(0, 0, width, 0);
+  gradient.addColorStop(0, '#10b981');
+  gradient.addColorStop(0.33, '#3b82f6');
+  gradient.addColorStop(0.66, '#8b5cf6');
+  gradient.addColorStop(1, '#ef4444');
+  
+  ctx.beginPath();
+  ctx.moveTo(0, height);
+  points.forEach((point, index) => {
+    ctx.lineTo(point.x, point.y);
+  });
+  ctx.lineTo(width, height);
+  ctx.closePath();
+  
+  ctx.fillStyle = gradient;
+  ctx.globalAlpha = 0.3;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  
+  // Draw line
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    if (index === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
+  });
+  
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// Redraw on resize
+window.addEventListener('resize', drawSleepWaveform);
+setTimeout(drawSleepWaveform, 100);
+
+// ============== HYDRATION TRACKER ==============
+const waterCountEl = document.getElementById('waterCount');
+const waterGlassesEl = document.getElementById('waterGlasses');
+const addWaterBtn = document.getElementById('addWaterBtn');
+
+function updateWaterDisplay() {
+  waterCountEl.textContent = state.waterIntake;
+  const glasses = waterGlassesEl.querySelectorAll('.glass');
+  glasses.forEach((glass, index) => {
+    glass.classList.toggle('filled', index < state.waterIntake);
+  });
+}
+
+addWaterBtn.addEventListener('click', () => {
+  if (state.waterIntake < 8) {
+    state.waterIntake++;
+    updateWaterDisplay();
+  } else {
+    // Reset or show celebration
+    state.waterIntake = 0;
+    updateWaterDisplay();
+  }
+});
+
+// ============== MOOD TRACKER ==============
+const moodBtns = document.querySelectorAll('.mood-btn');
+
+moodBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    moodBtns.forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.selectedMood = btn.dataset.mood;
+  });
+});
+
+// ============== AI CHAT FUNCTIONALITY ==============
+const messagesArea = document.getElementById('messagesArea');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const suggestionChips = document.querySelectorAll('.suggestion-chip');
+
+const aiResponses = {
+  'workout': "Based on your recent activity, I'd recommend a balanced approach:\n\n🏋️ **Strength Training** (3x/week)\n- Focus on compound movements\n- Allow 48h recovery between sessions\n\n🏃 **Cardio** (2-3x/week)\n- Mix of HIIT and steady-state\n- Keep heart rate in Zone 2 for endurance\n\n🧘 **Recovery** (daily)\n- Stretching or yoga\n- Adequate sleep (7-9 hours)\n\nWould you like a detailed workout plan for this week?",
+  
+  'nutrition': "Here are some nutrition tips based on your fitness goals:\n\n🥗 **Meal Timing**\n- Pre-workout: Carbs + protein 2h before\n- Post-workout: Protein within 30min\n\n💧 **Hydration**\n- Aim for 35ml per kg bodyweight\n- More on training days\n\n🍽️ **Macro Balance**\n- Protein: 1.6-2.2g/kg\n- Carbs: Fuel your workouts\n- Fats: Support hormone health\n\nWant me to create a meal plan for you?",
+  
+  'sleep': "Great question! Here's how to improve your sleep quality:\n\n🌙 **Evening Routine**\n- No screens 1h before bed\n- Keep room cool (18-20°C)\n- Consistent bedtime schedule\n\n☕ **Daytime Habits**\n- Limit caffeine after 2pm\n- Get morning sunlight\n- Exercise regularly (but not late)\n\n🛏️ **Sleep Environment**\n- Dark, quiet room\n- Comfortable mattress\n- Consider white noise\n\nYour current sleep score is 85 - implementing these could push it to 90+!",
+  
+  'recovery': "Recovery is crucial for progress! Here's what I recommend:\n\n💆 **Active Recovery**\n- Light walking or swimming\n- Foam rolling (10-15 min)\n- Gentle stretching\n\n🥤 **Nutrition**\n- Anti-inflammatory foods\n- Omega-3 fatty acids\n- Tart cherry juice\n\n😴 **Rest**\n- Quality sleep (most important!)\n- Nap if needed (20 min max)\n- Rest days are growth days\n\n🧊 **Therapy**\n- Cold exposure\n- Heat therapy\n- Massage\n\nYour HRV suggests you're recovering well. Keep it up!",
+  
+  'default': "That's a great question! As your fitness AI, I can help you with:\n\n• Personalized workout plans\n• Nutrition guidance\n• Recovery optimization\n• Sleep improvement\n• Goal setting & tracking\n• Form checks & technique\n• Motivation & accountability\n\nCould you tell me more about your specific fitness goals? This helps me give you the most relevant advice!"
+};
+
+function getAIResponse(query) {
+  const lowerQuery = query.toLowerCase();
+  
+  if (lowerQuery.includes('workout') || lowerQuery.includes('exercise') || lowerQuery.includes('train')) {
+    return aiResponses.workout;
+  } else if (lowerQuery.includes('nutrition') || lowerQuery.includes('diet') || lowerQuery.includes('food') || lowerQuery.includes('meal')) {
+    return aiResponses.nutrition;
+  } else if (lowerQuery.includes('sleep') || lowerQuery.includes('rest')) {
+    return aiResponses.sleep;
+  } else if (lowerQuery.includes('recovery') || lowerQuery.includes('rest day') || lowerQuery.includes('hrv')) {
+    return aiResponses.recovery;
+  } else {
+    return aiResponses.default;
+  }
+}
+
+function addMessage(content, isUser = false) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+  messageDiv.textContent = content;
+  messagesArea.appendChild(messageDiv);
+  messagesArea.scrollTop = messagesArea.scrollHeight;
+}
+
+function showTypingIndicator() {
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'typing-indicator';
+  typingDiv.id = 'typingIndicator';
+  typingDiv.innerHTML = `
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+  `;
+  messagesArea.appendChild(typingDiv);
+  messagesArea.scrollTop = messagesArea.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const typingIndicator = document.getElementById('typingIndicator');
+  if (typingIndicator) {
+    typingIndicator.remove();
+  }
+}
+
+function sendMessage(query) {
+  if (!query.trim()) return;
+  
+  // Add user message
+  addMessage(query, true);
+  state.chatHistory.push({ role: 'user', content: query });
+  
+  // Clear input
+  chatInput.value = '';
+  
+  // Show typing indicator
+  showTypingIndicator();
+  
+  // Simulate AI response delay
+  setTimeout(() => {
+    removeTypingIndicator();
+    const response = getAIResponse(query);
+    addMessage(response);
+    state.chatHistory.push({ role: 'assistant', content: response });
+  }, 1000 + Math.random() * 1000);
+}
+
+sendBtn.addEventListener('click', () => {
+  sendMessage(chatInput.value);
+});
+
+chatInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    sendMessage(chatInput.value);
+  }
+});
+
+suggestionChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    sendMessage(chip.dataset.query);
+  });
+});
+
+// ============== TOGGLE SWITCHES ==============
+const toggleSwitches = document.querySelectorAll('.toggle-switch');
+
+toggleSwitches.forEach(toggle => {
+  toggle.addEventListener('click', () => {
+    toggle.classList.toggle('active');
+  });
+});
+
+// ============== ACCESSIBILITY ENHANCEMENTS ==============
+// Keyboard navigation for cards
+document.querySelectorAll('.dot-metric-card, .menu-item, .suggestion-chip').forEach(el => {
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      el.click();
+    }
+  });
+});
+
+// Screen reader announcements
+function announceToScreenReader(message) {
+  const announcement = document.createElement('div');
+  announcement.className = 'sr-only';
+  announcement.setAttribute('aria-live', 'polite');
+  announcement.textContent = message;
+  document.body.appendChild(announcement);
+  setTimeout(() => announcement.remove(), 1000);
+}
+
+// Initialize profile avatar
+document.getElementById('profileAvatar').textContent = state.userName.charAt(0).toUpperCase();
+
+console.log('FitPulse initialized successfully! 🏃‍♂️');
+</script>
+</body>
+</html>
