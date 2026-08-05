@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PULSE — Your Health Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0d0f14;
+    --bg-secondary: #141820;
+    --bg-card: #1a1f29;
+    --bg-elevated: #222936;
+    --border-subtle: rgba(255,255,255,0.06);
+    --border-accent: rgba(99, 179, 255, 0.3);
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent-cyan: #06b6d4;
+    --accent-cyan-glow: rgba(6, 182, 212, 0.4);
+    --accent-violet: #8b5cf6;
+    --accent-violet-glow: rgba(139, 92, 246, 0.4);
+    --accent-emerald: #10b981;
+    --accent-rose: #f43f5e;
+    --accent-amber: #f59e0b;
+    --gradient-main: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+    --gradient-warm: linear-gradient(135deg, #f59e0b 0%, #f43f5e 100%);
+    --gradient-cool: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  html, body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  /* ===== APP CONTAINER ===== */
+  .app-container {
+    width: 100%;
+    max-width: 480px;
+    background: var(--bg-primary);
+    border-radius: 32px;
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+    position: relative;
+    min-height: 100vh;
+    box-shadow: 
+      0 0 0 1px rgba(255,255,255,0.03),
+      0 40px 80px -20px rgba(0,0,0,0.5),
+      0 0 100px rgba(6, 182, 212, 0.05);
+  }
+
+  .app-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 20%, rgba(139, 92, 246, 0.08), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.06), transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .screen {
+    display: none;
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+  }
+
+  .screen.active {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== WELCOME SCREEN ===== */
+  #welcome-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+    text-align: center;
+  }
+
+  .logo-mark {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .logo-pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--gradient-main);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+  }
+
+  .logo-icon {
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+
+  .welcome-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    font-weight: 400;
+    margin-bottom: 12px;
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .welcome-subtitle {
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+
+  .apple-health-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 18px 24px;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 16px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 16px;
+  }
+
+  .apple-health-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+  }
+
+  .apple-health-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .manual-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    padding: 16px 24px;
+    border-radius: 16px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+  }
+
+  .manual-btn:hover {
+    border-color: var(--border-accent);
+    color: var(--text-primary);
+  }
+
+  .privacy-note {
+    margin-top: 30px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ===== DASHBOARD ===== */
+  #dashboard-screen {
+    padding-bottom: 100px;
+  }
+
+  .dash-header {
+    padding: 30px 24px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .user-info h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+
+  .user-info p {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .streak-badge span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-amber);
+  }
+
+  /* ===== HERO CARD ===== */
+  .hero-section {
+    padding: 0 24px 24px;
+  }
+
+  .readiness-card {
+    background: var(--gradient-main);
+    border-radius: 24px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .readiness-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+  }
+
+  .readiness-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 12px;
+  }
+
+  .readiness-score {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .readiness-score .number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 64px;
+    line-height: 1;
+  }
+
+  .readiness-score .max {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    opacity: 0.6;
+  }
+
+  .readiness-status {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .readiness-insight {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ===== METRICS GRID ===== */
+  .section-header {
+    padding: 24px 24px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .view-all {
+    font-size: 13px;
+    color: var(--accent-cyan);
+    text-decoration: none;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 0 24px 24px;
+  }
+
+  .metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .metric-card:hover {
+    border-color: var(--border-accent);
+    transform: translateY(-2px);
+  }
+
+  .metric-card.accent-cyan { border-top: 3px solid var(--accent-cyan); }
+  .metric-card.accent-violet { border-top: 3px solid var(--accent-violet); }
+  .metric-card.accent-emerald { border-top: 3px solid var(--accent-emerald); }
+  .metric-card.accent-rose { border-top: 3px solid var(--accent-rose); }
+
+  .metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .metric-icon.cyan { background: rgba(6, 182, 212, 0.15); }
+  .metric-icon.violet { background: rgba(139, 92, 246, 0.15); }
+  .metric-icon.emerald { background: rgba(16, 185, 129, 0.15); }
+  .metric-icon.rose { background: rgba(244, 63, 94, 0.15); }
+
+  .metric-name {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .metric-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .metric-change {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .metric-change.up { color: var(--accent-emerald); }
+  .metric-change.down { color: var(--accent-rose); }
+
+  /* ===== INSIGHTS SECTION ===== */
+  .insights-section {
+    padding: 0 24px 24px;
+  }
+
+  .insight-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+
+  .insight-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .insight-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .insight-badge.priority {
+    background: rgba(244, 63, 94, 0.15);
+    color: var(--accent-rose);
+  }
+
+  .insight-badge.opportunity {
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--accent-cyan);
+  }
+
+  .insight-badge.maintenance {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--accent-emerald);
+  }
+
+  .insight-title {
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .insight-description {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .insight-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bg-elevated);
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .insight-action svg {
+    width: 18px;
+    height: 18px;
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+  }
+
+  /* ===== WEEKLY TREND ===== */
+  .trend-section {
+    padding: 0 24px 24px;
+  }
+
+  .trend-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 20px;
+  }
+
+  .trend-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 120px;
+    margin-top: 16px;
+    gap: 8px;
+  }
+
+  .trend-bar {
+    flex: 1;
+    background: var(--bg-elevated);
+    border-radius: 6px 6px 0 0;
+    position: relative;
+    transition: all 0.4s ease;
+    min-height: 20px;
+  }
+
+  .trend-bar::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--gradient-cool);
+    border-radius: 6px 6px 0 0;
+    transition: height 0.4s ease;
+  }
+
+  .trend-bar.today::before {
+    background: var(--gradient-main);
+  }
+
+  .trend-label {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  /* ===== BOTTOM NAV ===== */
+  .bottom-nav {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 440px;
+    background: rgba(26, 31, 41, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-around;
+    z-index: 100;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-muted);
+  }
+
+  .nav-item:hover {
+    background: rgba(255,255,255,0.05);
+  }
+
+  .nav-item.active {
+    color: var(--accent-cyan);
+  }
+
+  .nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .nav-item span {
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 28px;
+    padding: 32px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-card);
+    border-radius: 14px;
+    margin-bottom: 20px;
+  }
+
+  .sync-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent-emerald);
+    animation: sync-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes sync-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .data-source {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    background: var(--bg-card);
+    border-radius: 14px;
+    margin-bottom: 10px;
+  }
+
+  .data-source-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .data-source-info {
+    flex: 1;
+  }
+
+  .data-source-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .data-source-status {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .last-sync {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 16px;
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 3px;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    body { padding: 0; }
+    .app-container {
+      max-width: 100%;
+      border-radius: 0;
+      border: none;
+      min-height: 100vh;
+    }
+    .bottom-nav {
+      bottom: 0;
+      width: 100%;
+      max-width: 100%;
+      border-radius: 24px 24px 0 0;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ============ WELCOME SCREEN ============ -->
+  <div id="welcome-screen" class="screen active">
+    <div class="logo-mark">
+      <div class="logo-pulse"></div>
+      <div class="logo-icon">💜</div>
+    </div>
+    
+    <h1 class="welcome-title">PULSE</h1>
+    <p class="welcome-subtitle">
+      Your intelligent health companion.<br>
+      Sync with Apple Health for personalized<br>
+      insights and actionable recommendations.
+    </p>
+
+    <button class="apple-health-btn" onclick="connectAppleHealth()">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.96 1.07-3.11-1.05.05-2.31.72-3.06 1.64-.69.82-1.27 2.14-1.11 3.21 1.17.09 2.35-.91 3.1-1.74z"/>
+      </svg>
+      Connect Apple Health
+    </button>
+
+    <button class="manual-btn" onclick="startManualSetup()">
+      Enter Data Manually
+    </button>
+
+    <p class="privacy-note">
+      🔒 Your data is encrypted and stored locally.<br>
+      We never share your health information.
+    </p>
+  </div>
+
+  <!-- ============ DASHBOARD SCREEN ============ -->
+  <div id="dashboard-screen" class="screen">
+    
+    <header class="dash-header">
+      <div class="user-info">
+        <h1 id="greeting">Good Morning</h1>
+        <p id="current-date">Loading...</p>
+      </div>
+      <div class="streak-badge">
+        🔥 <span id="streak-count">0</span> day streak
+      </div>
+    </header>
+
+    <section class="hero-section">
+      <div class="readiness-card">
+        <div class="readiness-label">Daily Readiness Score</div>
+        <div class="readiness-score">
+          <span class="number" id="readiness-score">--</span>
+          <span class="max">/ 100</span>
+        </div>
+        <div class="readiness-status" id="readiness-status">Calculating...</div>
+        <div class="readiness-insight" id="readiness-insight">
+          Connecting to Apple Health to analyze your metrics...
+        </div>
+      </div>
+    </section>
+
+    <section class="section-header">
+      <span class="section-title">Vital Metrics</span>
+      <a href="#" class="view-all" onclick="openDataModal()">View All →</a>
+    </section>
+
+    <section class="metrics-grid">
+      <div class="metric-card accent-cyan">
+        <div class="metric-icon cyan">❤️</div>
+        <div class="metric-name">Resting Heart Rate</div>
+        <div class="metric-value" id="rhr-value">--</div>
+        <div class="metric-change" id="rhr-change">
+          <span>--</span>
+        </div>
+      </div>
+
+      <div class="metric-card accent-violet">
+        <div class="metric-icon violet">🌊</div>
+        <div class="metric-name">HRV</div>
+        <div class="metric-value" id="hrv-value">--</div>
+        <div class="metric-change" id="hrv-change">
+          <span>--</span>
+        </div>
+      </div>
+
+      <div class="metric-card accent-emerald">
+        <div class="metric-icon emerald">😴</div>
+        <div class="metric-name">Sleep Duration</div>
+        <div class="metric-value" id="sleep-value">--</div>
+        <div class="metric-change" id="sleep-change">
+          <span>--</span>
+        </div>
+      </div>
+
+      <div class="metric-card accent-rose">
+        <div class="metric-icon rose">👣</div>
+        <div class="metric-name">Steps Today</div>
+        <div class="metric-value" id="steps-value">--</div>
+        <div class="metric-change" id="steps-change">
+          <span>--</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-header">
+      <span class="section-title">Personalized Insights</span>
+    </section>
+
+    <section class="insights-section" id="insights-container">
+      <!-- Insights will be dynamically populated -->
+    </section>
+
+    <section class="section-header">
+      <span class="section-title">Weekly Trend</span>
+    </section>
+
+    <section class="trend-section">
+      <div class="trend-card">
+        <div class="section-title" style="margin-bottom: 8px;">Readiness Score</div>
+        <div class="trend-chart" id="weekly-chart">
+          <!-- Chart bars will be dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ============ BOTTOM NAVIGATION ============ -->
+  <nav class="bottom-nav" id="bottom-nav" style="display: none;">
+    <div class="nav-item active" onclick="switchTab('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="openDataModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      </svg>
+      <span>Metrics</span>
+    </div>
+    <div class="nav-item" onclick="openInsightsModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 16v-4M12 8h.01"/>
+      </svg>
+      <span>Insights</span>
+    </div>
+    <div class="nav-item" onclick="openSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+      <span>Settings</span>
+    </div>
+  </nav>
+
+</div>
+
+<!-- ============ DATA MODAL ============ -->
+<div class="modal-overlay" id="data-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Health Data Sources</h2>
+      <button class="modal-close" onclick="closeModal('data-modal')">&times;</button>
+    </div>
+
+    <div class="sync-status">
+      <div class="sync-indicator"></div>
+      <div>
+        <div style="font-weight: 600;">Apple Health Connected</div>
+        <div style="font-size: 12px; color: var(--text-secondary);">Syncing in real-time</div>
+      </div>
+    </div>
+
+    <div class="data-source">
+      <div class="data-source-icon" style="background: rgba(255,59,48,0.15);">❤️</div>
+      <div class="data-source-info">
+        <div class="data-source-name">Heart Rate</div>
+        <div class="data-source-status">Last synced: Just now</div>
+      </div>
+      <div style="color: var(--accent-emerald); font-size: 12px;">Active</div>
+    </div>
+
+    <div class="data-source">
+      <div class="data-source-icon" style="background: rgba(88,86,214,0.15);">😴</div>
+      <div class="data-source-info">
+        <div class="data-source-name">Sleep Analysis</div>
+        <div class="data-source-status">Last synced: This morning</div>
+      </div>
+      <div style="color: var(--accent-emerald); font-size: 12px;">Active</div>
+    </div>
+
+    <div class="data-source">
+      <div class="data-source-icon" style="background: rgba(255,149,0,0.15);">👟</div>
+      <div class="data-source-info">
+        <div class="data-source-name">Steps & Distance</div>
+        <div class="data-source-status">Last synced: Just now</div>
+      </div>
+      <div style="color: var(--accent-emerald); font-size: 12px;">Active</div>
+    </div>
+
+    <div class="data-source">
+      <div class="data-source-icon" style="background: rgba(48,209,88,0.15);">🔋</div>
+      <div class="data-source-info">
+        <div class="data-source-name">Workouts</div>
+        <div class="data-source-status">Last synced: Yesterday</div>
+      </div>
+      <div style="color: var(--accent-emerald); font-size: 12px;">Active</div>
+    </div>
+
+    <p class="last-sync">Auto-sync enabled • Updates every 15 minutes</p>
+  </div>
+</div>
+
+<!-- ============ INSIGHTS MODAL ============ -->
+<div class="modal-overlay" id="insights-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Your Insights</h2>
+      <button class="modal-close" onclick="closeModal('insights-modal')">&times;</button>
+    </div>
+    <div id="full-insights-list">
+      <!-- Full list of insights -->
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================== STATE MANAGEMENT ==================== */
+const state = {
+  user: {
+    name: 'Alex',
+    connected: false,
+    appleHealthConnected: false
+  },
+  metrics: {
+    readiness: 0,
+    rhr: 0,
+    hrv: 0,
+    sleepHours: 0,
+    steps: 0,
+    calories: 0,
+    activeMinutes: 0,
+    spo2: 0
+  },
+  historical: [],
+  streak: 0
+};
+
+/* ==================== INITIALIZATION ==================== */
+document.addEventListener('DOMContentLoaded', () => {
+  loadUserData();
+  updateDateDisplay();
+});
+
+function updateDateDisplay() {
+  const now = new Date();
+  const options = { weekday: 'long', month: 'long', day: 'numeric' };
+  document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+  
+  const hour = now.getHours();
+  let greeting = 'Good Morning';
+  if (hour >= 12 && hour < 17) greeting = 'Good Afternoon';
+  else if (hour >= 17) greeting = 'Good Evening';
+  document.getElementById('greeting').textContent = greeting;
+}
+
+/* ==================== APPLE HEALTH INTEGRATION ==================== */
+function connectAppleHealth() {
+  // Simulate Apple HealthKit connection
+  // In production, this would use HealthKit JS bridge or native wrapper
+  
+  showConnectingState();
+  
+  setTimeout(() => {
+    state.user.appleHealthConnected = true;
+    state.user.connected = true;
+    
+    // Generate realistic health data
+    generateHealthData();
+    
+    // Save to localStorage
+    saveUserData();
+    
+    // Transition to dashboard
+    showDashboard();
+  }, 2000);
+}
+
+function showConnectingState() {
+  const btn = document.querySelector('.apple-health-btn');
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2"/>
+    </svg>
+    Connecting...
+  `;
+  btn.style.opacity = '0.8';
+}
+
+function startManualSetup() {
+  state.user.connected = true;
+  generateHealthData();
+  saveUserData();
+  showDashboard();
+}
+
+/* ==================== DATA GENERATION ==================== */
+function generateHealthData() {
+  // Generate realistic health metrics
+  const baseRHR = 52 + Math.floor(Math.random() * 15);
+  const baseHRV = 45 + Math.floor(Math.random() * 40);
+  const sleepHours = 6.5 + Math.random() * 2.5;
+  const steps = 5000 + Math.floor(Math.random() * 10000);
+  
+  state.metrics = {
+    readiness: calculateReadinessScore(baseRHR, baseHRV, sleepHours),
+    rhr: baseRHR,
+    hrv: Math.round(baseHRV),
+    sleepHours: parseFloat(sleepHours.toFixed(1)),
+    steps: steps,
+    calories: 1800 + Math.floor(Math.random() * 800),
+    activeMinutes: 30 + Math.floor(Math.random() * 90),
+    spo2: 96 + Math.floor(Math.random() * 4)
+  };
+  
+  // Generate historical data for trends
+  state.historical = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    state.historical.push({
+      date: date.toISOString().split('T')[0],
+      readiness: Math.min(100, Math.max(40, state.metrics.readiness + (Math.random() - 0.5) * 30)),
+      rhr: baseRHR + Math.floor((Math.random() - 0.5) * 10),
+      sleepHours: sleepHours + (Math.random() - 0.5) * 2
+    });
+  }
+  
+  // Calculate streak
+  state.streak = Math.floor(Math.random() * 30) + 1;
+  
+  updateDashboard();
+}
+
+function calculateReadinessScore(rhr, hrv, sleep) {
+  // Algorithm similar to Whoop/Oura
+  const rhrScore = Math.max(0, 100 - (rhr - 50) * 2);
+  const hrvScore = Math.min(100, hrv * 1.5);
+  const sleepScore = Math.min(100, sleep * 12);
+  
+  return Math.round((rhrScore * 0.3 + hrvScore * 0.4 + sleepScore * 0.3));
+}
+
+/* ==================== DASHBOARD UPDATE ==================== */
+function updateDashboard() {
+  // Update readiness score
+  const scoreEl = document.getElementById('readiness-score');
+  const statusEl = document.getElementById('readiness-status');
+  const insightEl = document.getElementById('readiness-insight');
+  
+  animateValue(scoreEl, 0, state.metrics.readiness, 1500);
+  
+  // Set status based on score
+  let status, insight;
+  if (state.metrics.readiness >= 80) {
+    status = '🟢 Peak Performance';
+    insight = 'Your body is fully recovered! Perfect day for intense training or challenging activities.';
+  } else if (state.metrics.readiness >= 60) {
+    status = '🟡 Ready to Perform';
+    insight = 'Good recovery levels. You can handle moderate training with proper warm-up.';
+  } else if (state.metrics.readiness >= 40) {
+    status = '🟠 Needs Recovery';
+    insight = 'Your body needs rest. Consider light activity or active recovery today.';
+  } else {
+    status = '🔴 Poor Recovery';
+    insight = 'Prioritize rest today. Low readiness indicates your body is still recovering.';
+  }
+  
+  statusEl.textContent = status;
+  insightEl.textContent = insight;
+  
+  // Update metric cards
+  updateMetricCard('rhr', state.metrics.rhr, 'bpm', -2);
+  updateMetricCard('hrv', state.metrics.hrv, 'ms', 5);
+  updateMetricCard('sleep', state.metrics.sleepHours, 'hrs', 0.5);
+  updateMetricCard('steps', state.metrics.steps.toLocaleString(), '', 1200);
+  
+  // Update streak
+  document.getElementById('streak-count').textContent = state.streak;
+  
+  // Generate insights
+  generateInsights();
+  
+  // Render weekly chart
+  renderWeeklyChart();
+}
+
+function updateMetricCard(prefix, value, unit, change) {
+  const valueEl = document.getElementById(`${prefix}-value`);
+  const changeEl = document.getElementById(`${prefix}-change`);
+  
+  if (valueEl) {
+    if (prefix === 'steps') {
+      valueEl.textContent = value;
+    } else {
+      valueEl.textContent = `${value}${unit ? ' ' + unit : ''}`;
+    }
+  }
+  
+  if (changeEl) {
+    const direction = change >= 0 ? 'up' : 'down';
+    const arrow = change >= 0 ? '↑' : '↓';
+    changeEl.className = `metric-change ${direction}`;
+    changeEl.innerHTML = `<span>${arrow} ${Math.abs(change)}${unit ? ' ' + unit : ''} vs last week</span>`;
+  }
+}
+
+function animateValue(element, start, end, duration) {
+  const range = end - start;
+  const startTime = performance.now();
+  
+  function step(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(start + range * easeProgress);
+    
+    element.textContent = current;
+    
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+  
+  requestAnimationFrame(step);
+}
+
+/* ==================== INSIGHTS GENERATION ==================== */
+function generateInsights() {
+  const insights = [];
+  
+  // HRV Insight
+  if (state.metrics.hrv < 50) {
+    insights.push({
+      type: 'priority',
+      title: 'Low HRV Detected',
+      description: `Your HRV of ${state.metrics.hrv}ms is below optimal. This suggests your nervous system is under stress.`,
+      action: 'Try 10 minutes of box breathing: inhale 4s, hold 4s, exhale 4s, hold 4s.',
+      icon: '🧘'
+    });
+  } else if (state.metrics.hrv > 70) {
+    insights.push({
+      type: 'maintenance',
+      title: 'Excellent HRV',
+      description: `Your HRV of ${state.metrics.hrv}ms indicates great recovery and adaptability.`,
+      action: 'Maintain your current routine - it\'s working well!',
+      icon: '✅'
+    });
+  }
+  
+  // Sleep Insight
+  if (state.metrics.sleepHours < 7) {
+    insights.push({
+      type: 'priority',
+      title: 'Sleep Optimization Needed',
+      description: `You got ${state.metrics.sleepHours} hours of sleep. Aim for 7-9 hours for optimal recovery.`,
+      action: 'Try: No screens 1 hour before bed, room temp 65-68°F, consistent sleep schedule.',
+      icon: '😴'
+    });
+  } else {
+    insights.push({
+      type: 'opportunity',
+      title: 'Great Sleep Duration',
+      description: `Solid ${state.metrics.sleepHours} hours! Focus on sleep quality next.`,
+      action: 'Consider tracking sleep stages to optimize deep and REM sleep.',
+      icon: '🌙'
+    });
+  }
+  
+  // RHR Insight
+  if (state.metrics.rhr > 60) {
+    insights.push({
+      type: 'opportunity',
+      title: 'Elevated Resting Heart Rate',
+      description: `Your RHR of ${state.metrics.rhr} bpm is slightly elevated.`,
+      action: 'Increase cardio zones 1-2 training. Try 30min walks daily.',
+      icon: '❤️'
+    });
+  }
+  
+  // Activity Insight
+  if (state.metrics.steps < 6000) {
+    insights.push({
+      type: 'priority',
+      title: 'Increase Daily Movement',
+      description: `Only ${state.metrics.steps} steps today. Sedentary behavior impacts recovery.`,
+      action: 'Set hourly movement reminders. Aim for 500 steps every hour.',
+      icon: '🚶'
+    });
+  }
+  
+  state.insights = insights;
+  renderInsights();
+}
+
+function renderInsights() {
+  const container = document.getElementById('insights-container');
+  const fullList = document.getElementById('full-insights-list');
+  
+  if (!container || !state.insights) return;
+  
+  const html = state.insights.slice(0, 3).map(insight => createInsightHTML(insight)).join('');
+  container.innerHTML = html;
+  
+  if (fullList) {
+    fullList.innerHTML = state.insights.map(insight => createInsightHTML(insight)).join('');
+  }
+}
+
+function createInsightHTML(insight) {
+  return `
+    <div class="insight-card">
+      <div class="insight-header">
+        <span class="insight-badge ${insight.type}">${insight.type}</span>
+        <span class="insight-title">${insight.icon} ${insight.title}</span>
+      </div>
+      <p class="insight-description">${insight.description}</p>
+      <div class="insight-action">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4M12 8h.01"/>
+        </svg>
+        <span>${insight.action}</span>
+      </div>
+    </div>
+  `;
+}
+
+/* ==================== WEEKLY CHART ==================== */
+function renderWeeklyChart() {
+  const chart = document.getElementById('weekly-chart');
+  if (!chart || !state.historical.length) return;
+  
+  const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const today = new Date().getDay();
+  
+  let html = '';
+  state.historical.forEach((day, index) => {
+    const height = (day.readiness / 100) * 100;
+    const isToday = index === state.historical.length - 1;
+    
+    html += `
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+        <div class="trend-bar ${isToday ? 'today' : ''}" style="height: ${Math.max(20, height)}%;">
+        </div>
+        <div class="trend-label">${days[(today - 6 + index + 7) % 7]}</div>
+      </div>
+    `;
+  });
+  
+  chart.innerHTML = html;
+}
+
+/* ==================== UI FUNCTIONS ==================== */
+function showDashboard() {
+  document.getElementById('welcome-screen').classList.remove('active');
+  document.getElementById('dashboard-screen').classList.add('active');
+  document.getElementById('bottom-nav').style.display = 'flex';
+  updateDashboard();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  event.currentTarget.classList.add('active');
+  
+  if (tab === 'dashboard') {
+    // Already on dashboard
+  }
+}
+
+function openDataModal() {
+  document.getElementById('data-modal').classList.add('active');
+}
+
+function openInsightsModal() {
+  document.getElementById('full-insights-list').innerHTML = 
+    state.insights.map(insight => createInsightHTML(insight)).join('');
+  document.getElementById('insights-modal').classList.add('active');
+}
+
+function openSettings() {
+  alert('Settings panel coming soon!\n\nFeatures:\n• Notification preferences\n• Goal settings\n• Data export\n• Connected apps');
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.remove('active');
+}
+
+/* ==================== DATA PERSISTENCE ==================== */
+function saveUserData() {
+  localStorage.setItem('pulse_user', JSON.stringify(state.user));
+  localStorage.setItem('pulse_metrics', JSON.stringify(state.metrics));
+  localStorage.setItem('pulse_historical', JSON.stringify(state.historical));
+  localStorage.setItem('pulse_streak', state.streak.toString());
+}
+
+function loadUserData() {
+  const savedUser = localStorage.getItem('pulse_user');
+  if (savedUser) {
+    state.user = JSON.parse(savedUser);
+    state.metrics = JSON.parse(localStorage.getItem('pulse_metrics') || '{}');
+    state.historical = JSON.parse(localStorage.getItem('pulse_historical') || '[]');
+    state.streak = parseInt(localStorage.getItem('pulse_streak') || '0');
+    
+    if (state.user.connected) {
+      showDashboard();
+    }
+  }
+}
+
+/* ==================== ANIMATIONS ==================== */
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(style);
+
+</script>
+</body>
+</html>
